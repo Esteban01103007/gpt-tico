@@ -1,231 +1,346 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>GPT-Tico Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-Tico</title>
+    <style>
+        /* Variables y Reset */
+        :root {
+            --bg: #ffffff;
+            --text: #0f0f0f;
+            --sidebar: #f7f7f8;
+            --hover: #ececec;
+            --border: #e5e5e5;
+            --muted: #6e6e6e;
+            --accent: #2563eb;
+        }
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f172a;
-    color: white;
-    display: flex;
-    height: 100vh;
-}
+        body.dark {
+            --bg: #0f0f0f;
+            --text: #ffffff;
+            --sidebar: #1e1e1e;
+            --hover: #2a2a2a;
+            --border: #2f2f2f;
+            --muted: #9a9a9a;
+        }
 
-.sidebar {
-    width: 260px;
-    background: #020617;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
 
-.sidebar h3 {
-    margin: 0 0 10px;
-}
+        body {
+            display: flex;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s ease;
+        }
 
-.chat-list {
-    flex: 1;
-    overflow-y: auto;
-}
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
 
-.chat-item {
-    padding: 10px;
-    margin-bottom: 6px;
-    background: #111827;
-    border-radius: 6px;
-    cursor: pointer;
-}
+        .logo {
+            height: 72px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
 
-.chat-item.active {
-    background: #2563eb;
-}
+        .logo img { height: 42px; margin-right: 10px; }
 
-.new-chat {
-    margin-top: 10px;
-    padding: 10px;
-    background: #22c55e;
-    border-radius: 6px;
-    cursor: pointer;
-    text-align: center;
-    color: black;
-    font-weight: bold;
-}
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 10px 0;
+        }
 
-.chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
+        .section-title {
+            font-size: 12px;
+            color: var(--muted);
+            padding: 6px 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-#chat-container {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-.msg-bubble {
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    max-width: 75%;
-}
+        .sidebar-item:hover, .sidebar-item.active {
+            background: var(--hover);
+        }
 
-.user {
-    background: #2563eb;
-    margin-left: auto;
-}
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-.bot {
-    background: #1e293b;
-}
+        .topbar {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
 
-.error {
-    background: #dc2626;
-}
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 50px;
+            height: 26px;
+            border-radius: 20px;
+            background: var(--hover);
+            border: 1px solid var(--border);
+            position: relative;
+            cursor: pointer;
+        }
 
-.input-area {
-    display: flex;
-    padding: 10px;
-    background: #020617;
-}
+        .toggle-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00c853;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            transition: transform 0.3s ease;
+        }
 
-input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
-    outline: none;
-}
+        body.dark .toggle-indicator {
+            transform: translateX(22px);
+        }
 
-button {
-    margin-left: 10px;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    background: #22c55e;
-    cursor: pointer;
-}
-</style>
+        /* Chat Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .msg-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .msg-bubble.user {
+            align-self: flex-end;
+            background: var(--accent);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-bubble.bot {
+            align-self: flex-start;
+            background: var(--hover);
+            border-bottom-left-radius: 4px;
+        }
+
+        #welcome-msg {
+            text-align: center;
+            color: var(--muted);
+            margin-top: auto;
+            margin-bottom: auto;
+            font-size: 1.5rem;
+        }
+
+        /* Input Area */
+        .input-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 768px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 14px 50px 14px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--sidebar);
+            color: var(--text);
+            outline: none;
+            font-size: 16px;
+        }
+
+        .input-box:focus {
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .txtabajo {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+    </style>
 </head>
+<body class="dark">
 
-<body>
-
-<div class="sidebar">
-    <h3>Tus chats</h3>
-    <div class="chat-list" id="chatList"></div>
-    <div class="new-chat" id="newChatBtn">+ Nuevo chat</div>
-</div>
-
-<div class="chat-area">
-    <div id="chat-container"></div>
-
-    <div class="input-area">
-        <input id="user-input" placeholder="Escribe un mensaje..." />
-        <button id="send-btn">Enviar</button>
+<aside class="sidebar">
+    <div class="logo">
+        <span>GPT-Tico</span>
     </div>
-</div>
+    <div class="divider"></div>
+    <div class="section-title">Chats específicos</div>
+    <div class="sidebar-item active" data-chat="programacion">💻 Programación</div>
+    <div class="sidebar-item" data-chat="futbol">⚽ Fútbol</div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <span>v1.0 / Chat Actual</span>
+        <div class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+            <div class="toggle-indicator"></div>
+        </div>
+    </header>
+
+    <div class="content" id="chat-container">
+        </div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input id="user-input" class="input-box" placeholder="Pregunta lo que quieras..." autocomplete="off">
+            <button id="send-btn" class="send-btn">➤</button>
+        </div>
+        <div class="txtabajo">GPT-Tico puede cometer errores. Versión 2026.</div>
+    </div>
+</main>
 
 <script>
-const API_URL = "https://gpt-tico.onrender.com/api/chat";
+    const API_URL = "https://gpt-tico.onrender.com/api/chat";
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatItems = document.querySelectorAll('.sidebar-item');
 
-const chatList = document.getElementById("chatList");
-const chatContainer = document.getElementById("chat-container");
-const sendBtn = document.getElementById("send-btn");
-const userInput = document.getElementById("user-input");
-const newChatBtn = document.getElementById("newChatBtn");
+    let currentChat = 'programacion';
+    const chats = { programacion: [], futbol: [] };
 
-let chats = {};
-let currentChatId = null;
+    function renderChat() {
+        chatContainer.innerHTML = '';
+        const history = chats[currentChat];
 
-/* Crear chat */
-function createChat() {
-    const id = "chat-" + Date.now();
-    chats[id] = {
-        name: "Chat " + Object.keys(chats).length,
-        history: []
-    };
-    currentChatId = id;
-    renderChatList();
-    renderMessages();
-}
+        if (history.length === 0) {
+            const welcome = document.createElement('div');
+            welcome.id = 'welcome-msg';
+            welcome.textContent = '¿En qué puedo ayudarte hoy?';
+            chatContainer.appendChild(welcome);
+            return;
+        }
 
-function renderChatList() {
-    chatList.innerHTML = "";
-    for (let id in chats) {
-        const div = document.createElement("div");
-        div.className = "chat-item" + (id === currentChatId ? " active" : "");
-        div.textContent = chats[id].name;
-        div.onclick = () => {
-            currentChatId = id;
-            renderChatList();
-            renderMessages();
-        };
-        chatList.appendChild(div);
+        history.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = `msg-bubble ${msg.role === 'user' ? 'user' : 'bot'}`;
+            // Corregido: Uso de backticks (`) para template literals
+            div.innerHTML = `<b>${msg.role === 'user' ? 'Tú' : 'GPT-Tico'}:</b> ${msg.content}`;
+            chatContainer.appendChild(div);
+        });
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-}
 
-function renderMessages() {
-    chatContainer.innerHTML = "";
-    if (!currentChatId) return;
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
 
-    chats[currentChatId].history.forEach(msg => {
-        const div = document.createElement("div");
-        div.className = "msg-bubble " + (msg.role === "user" ? "user" : "bot");
-        div.innerHTML = `<b>${msg.role === "user" ? "Tú" : "GPT-Tico"}:</b> ${msg.content}`;
-        chatContainer.appendChild(div);
+        // Agregar mensaje del usuario
+        chats[currentChat].push({ role: 'user', content: text });
+        userInput.value = '';
+        renderChat();
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    history: chats[currentChat]
+                })
+            });
+
+            if (!res.ok) throw new Error('Error en API');
+
+            const data = await res.json();
+            chats[currentChat].push({ role: 'assistant', content: data.reply });
+        } catch (error) {
+            chats[currentChat].push({ role: 'assistant', content: '❌ Error de conexión con el servidor.' });
+        } finally {
+            renderChat();
+        }
+    }
+
+    // Eventos
+    chatItems.forEach(item => {
+        item.onclick = () => {
+            chatItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            currentChat = item.dataset.chat;
+            renderChat();
+        };
     });
 
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+    sendBtn.onclick = sendMessage;
+    userInput.onkeydown = e => { if (e.key === 'Enter') sendMessage(); };
 
-async function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text || !currentChatId) return;
-
-    chats[currentChatId].history.push({ role: "user", content: text });
-    userInput.value = "";
-    renderMessages();
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                message: text,
-                history: chats[currentChatId].history
-            })
-        });
-
-        const data = await response.json();
-
-        chats[currentChatId].history.push({
-            role: "assistant",
-            content: data.reply
-        });
-
-        renderMessages();
-
-    } catch {
-        chats[currentChatId].history.push({
-            role: "assistant",
-            content: "Error al conectar con el servidor"
-        });
-        renderMessages();
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
     }
-}
 
-sendBtn.onclick = sendMessage;
-userInput.onkeydown = e => {
-    if (e.key === "Enter") sendMessage();
-};
-
-newChatBtn.onclick = createChat;
-
-/* Chat inicial */
-createChat();
+    // Inicializar
+    renderChat();
 </script>
 
 </body>
