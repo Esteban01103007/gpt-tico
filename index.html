@@ -1,360 +1,309 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT-Tico</title>
-    <style>
-        /* Variables y Reset */
-        :root {
-            --bg: #ffffff;
-            --text: #0f0f0f;
-            --sidebar: #f7f7f8;
-            --hover: #ececec;
-            --border: #e5e5e5;
-            --muted: #6e6e6e;
-            --accent: #2563eb;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPT-Tico</title>
 
-        body.dark {
-            --bg: #0f0f0f;
-            --text: #ffffff;
-            --sidebar: #1e1e1e;
-            --hover: #2a2a2a;
-            --border: #2f2f2f;
-            --muted: #9a9a9a;
-        }
+<style>
+/* ================= VARIABLES ================= */
+:root{
+    --bg:#ffffff;
+    --text:#0f0f0f;
+    --sidebar:#f7f7f8;
+    --hover:#ececec;
+    --border:#e5e5e5;
+    --muted:#6e6e6e;
+    --accent:#2563eb;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
+body.dark{
+    --bg:#0f0f0f;
+    --text:#ffffff;
+    --sidebar:#1e1e1e;
+    --hover:#2a2a2a;
+    --border:#2f2f2f;
+    --muted:#9a9a9a;
+}
 
-        body {
-            display: flex;
-            height: 100vh;
-            background: var(--bg);
-            color: var(--text);
-            transition: background 0.3s ease;
-        }
+/* ================= RESET ================= */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:system-ui,-apple-system,sans-serif;
+}
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: var(--sidebar);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 12px;
-        }
+body{
+    display:flex;
+    height:100vh;
+    background:var(--bg);
+    color:var(--text);
+}
 
-        .logo {
-            height: 72px;
-            display: flex;
-            align-items: center;
-            padding-left: 10px;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
+/* ================= SIDEBAR ================= */
+.sidebar{
+    width:260px;
+    height:100vh;
+    background:var(--sidebar);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:12px;
+}
 
-        .logo img { height: 42px; margin-right: 10px; }
+.logo{
+    height:64px;
+    display:flex;
+    align-items:center;
+    padding-left:10px;
+    font-weight:700;
+    font-size:1.2rem;
+}
 
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 10px 0;
-        }
+.divider{
+    height:1px;
+    background:var(--border);
+    margin:10px 0;
+}
 
-        .section-title {
-            font-size: 12px;
-            color: var(--muted);
-            padding: 6px 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+.section-title{
+    font-size:12px;
+    color:var(--muted);
+    padding:6px 10px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
 
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+.sidebar-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+}
 
-        .sidebar-item:hover, .sidebar-item.active {
-            background: var(--hover);
-        }
+.sidebar-item:hover,
+.sidebar-item.active{
+    background:var(--hover);
+}
 
-        /* Main Content */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+/* ===== TUS CHATS ===== */
+.chats-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 10px;
+}
 
-        .topbar {
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-        }
+.chats-title{
+    font-size:12px;
+    color:var(--muted);
+}
 
-        /* Theme Toggle */
-        .theme-toggle {
-            width: 50px;
-            height: 26px;
-            border-radius: 20px;
-            background: var(--hover);
-            border: 1px solid var(--border);
-            position: relative;
-            cursor: pointer;
-        }
+.new-chat-btn{
+    width:26px;
+    height:26px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text);
+    cursor:pointer;
+    font-size:16px;
+    line-height:0;
+}
 
-        .toggle-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #00c853;
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            transition: transform 0.3s ease;
-        }
+.new-chat-btn:hover{
+    background:var(--hover);
+}
 
-        body.dark .toggle-indicator {
-            transform: translateX(22px);
-        }
+.chat-list{
+    flex:1;
+}
 
-        /* Chat Area */
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+/* ================= MAIN ================= */
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
 
-        .msg-bubble {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 15px;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
+/* ================= TOPBAR ================= */
+.topbar{
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    border-bottom:1px solid var(--border);
+    font-weight:600;
+}
 
-        .msg-bubble.user {
-            align-self: flex-end;
-            background: var(--accent);
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
+/* ================= TOGGLE ================= */
+.theme-toggle{
+    width:50px;
+    height:26px;
+    border-radius:20px;
+    background:var(--hover);
+    border:1px solid var(--border);
+    position:relative;
+    cursor:pointer;
+}
 
-        .msg-bubble.bot {
-            align-self: flex-start;
-            background: var(--hover);
-            border-bottom-left-radius: 4px;
-        }
+.toggle-indicator{
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:#00c853;
+    position:absolute;
+    top:2px;
+    left:3px;
+    transition:.3s;
+}
 
-        #welcome-msg {
-            text-align: center;
-            color: var(--muted);
-            margin-top: auto;
-            margin-bottom: auto;
-            font-size: 1.5rem;
-        }
+body.dark .toggle-indicator{
+    transform:translateX(22px);
+}
 
-        /* Input Area */
-        .input-container {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+/* ================= CHAT ================= */
+.content{
+    flex:1;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    overflow-y:auto;
+}
 
-        .input-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 768px;
-        }
+#welcome-msg{
+    margin:auto;
+    font-size:22px;
+    color:var(--muted);
+}
 
-        .input-box {
-            width: 100%;
-            padding: 14px 50px 14px 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--sidebar);
-            color: var(--text);
-            outline: none;
-            font-size: 16px;
-        }
+.msg-bubble{
+    max-width:80%;
+    padding:12px 16px;
+    border-radius:18px;
+    font-size:15px;
+}
 
-        .input-box:focus {
-            border-color: var(--accent);
-        }
+.msg-bubble.user{
+    align-self:flex-end;
+    background:var(--accent);
+    color:#fff;
+}
 
-        .send-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--accent);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.msg-bubble.bot{
+    align-self:flex-start;
+    background:var(--hover);
+}
 
-        .txtabajo {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 10px;
-        }
-    </style>
+/* ================= INPUT ================= */
+.input-container{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.input-wrapper{
+    width:100%;
+    max-width:760px;
+    position:relative;
+}
+
+.input-box{
+    width:100%;
+    padding:14px 52px 14px 20px;
+    border-radius:24px;
+    border:1px solid var(--border);
+    background:var(--sidebar);
+    color:var(--text);
+    font-size:16px;
+}
+
+.send-btn{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:8px;
+    background:var(--accent);
+    color:#fff;
+    cursor:pointer;
+}
+
+.txtabajo{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--muted);
+}
+</style>
 </head>
+
 <body class="dark">
 
+<!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
-    <div class="logo">
-        <span>GPT-Tico</span>
-    </div>
+
+    <div class="logo">GPT-Tico</div>
+
     <div class="divider"></div>
+
     <div class="section-title">Chats específicos</div>
     <div class="sidebar-item active" data-chat="programacion">💻 Programación</div>
     <div class="sidebar-item" data-chat="futbol">⚽ Fútbol</div>
-</aside>
 
     <div class="divider"></div>
 
-<div class="chats-header">
-    <span class="chats-title">Tus chats</span>
-    <button class="new-chat-btn" title="Nuevo chat">+</button>
-</div>
-
-<div class="chat-list">
-    <!-- Aquí luego irán los chats -->
-</div>
-
-
-<main class="main">
-    <header class="topbar">
-        <span>v1.0 / Chat Actual</span>
-        <div class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
-            <div class="toggle-indicator"></div>
-        </div>
-    </header>
-
-    <div class="content" id="chat-container">
-        </div>
-
-    <div class="input-container">
-        <div class="input-wrapper">
-            <input id="user-input" class="input-box" placeholder="Pregunta lo que quieras..." autocomplete="off">
-            <button id="send-btn" class="send-btn">➤</button>
-        </div>
-        <div class="txtabajo">GPT-Tico puede cometer errores. Versión 2026.</div>
+    <div class="chats-header">
+        <span class="chats-title">Tus chats</span>
+        <button class="new-chat-btn">+</button>
     </div>
+
+    <div class="chat-list"></div>
+
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+<header class="topbar">
+    <span>v1.0 / Chat Actual</span>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <div class="toggle-indicator"></div>
+    </div>
+</header>
+
+<div class="content" id="chat-container"></div>
+
+<div class="input-container">
+    <div class="input-wrapper">
+        <input class="input-box" placeholder="Pregunta lo que quieras...">
+        <button class="send-btn">➤</button>
+    </div>
+    <div class="txtabajo">GPT-Tico puede cometer errores. Versión 2026.</div>
+</div>
+
 </main>
 
 <script>
-    const API_URL = "https://gpt-tico.onrender.com/api/chat";
-    const chatContainer = document.getElementById('chat-container');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const chatItems = document.querySelectorAll('.sidebar-item');
+function toggleTheme(){
+    document.body.classList.toggle("dark");
+}
 
-    let currentChat = 'programacion';
-    const chats = { programacion: [], futbol: [] };
-
-    function renderChat() {
-        chatContainer.innerHTML = '';
-        const history = chats[currentChat];
-
-        if (history.length === 0) {
-            const welcome = document.createElement('div');
-            welcome.id = 'welcome-msg';
-            welcome.textContent = '¿En qué puedo ayudarte hoy?';
-            chatContainer.appendChild(welcome);
-            return;
-        }
-
-        history.forEach(msg => {
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${msg.role === 'user' ? 'user' : 'bot'}`;
-            // Corregido: Uso de backticks (`) para template literals
-            div.innerHTML = `<b>${msg.role === 'user' ? 'Tú' : 'GPT-Tico'}:</b> ${msg.content}`;
-            chatContainer.appendChild(div);
-        });
-
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        // Agregar mensaje del usuario
-        chats[currentChat].push({ role: 'user', content: text });
-        userInput.value = '';
-        renderChat();
-
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: text,
-                    history: chats[currentChat]
-                })
-            });
-
-            if (!res.ok) throw new Error('Error en API');
-
-            const data = await res.json();
-            chats[currentChat].push({ role: 'assistant', content: data.reply });
-        } catch (error) {
-            chats[currentChat].push({ role: 'assistant', content: '❌ Error de conexión con el servidor.' });
-        } finally {
-            renderChat();
-        }
-    }
-
-    // Eventos
-    chatItems.forEach(item => {
-        item.onclick = () => {
-            chatItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            currentChat = item.dataset.chat;
-            renderChat();
-        };
-    });
-
-    sendBtn.onclick = sendMessage;
-    userInput.onkeydown = e => { if (e.key === 'Enter') sendMessage(); };
-
-    function toggleTheme() {
-        document.body.classList.toggle('dark');
-    }
-
-    // Inicializar
-    renderChat();
+const chatContainer = document.getElementById("chat-container");
+const welcome = document.createElement("div");
+welcome.id = "welcome-msg";
+welcome.textContent = "¿En qué puedo ayudarte hoy?";
+chatContainer.appendChild(welcome);
 </script>
 
 </body>
 </html>
-
