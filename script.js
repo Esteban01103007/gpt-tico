@@ -1,83 +1,95 @@
-const sendBtn = document.getElementById('send-btn');
-const userInput = document.getElementById('user-input');
-const chatContainer = document.getElementById('chat-container');
-const welcomeMsg = document.getElementById('welcome-msg');
-
-let history = [];
 const API_URL = "https://gpt-tico.onrender.com/api/chat";
+
+const chatContainer = document.getElementById('chat-container');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const chatItems = document.querySelectorAll('.sidebar-item');
+
+let currentChat = 'programacion';
+
+const chats = {
+    programacion: [],
+    futbol: []
+};
+
+function renderChat() {
+    chatContainer.innerHTML = '';
+    const history = chats[currentChat];
+
+    if (history.length === 0) {
+        const welcome = document.createElement('div');
+        welcome.id = 'welcome-msg';
+        welcome.textContent = '¿Qué tienes pensado para hoy?';
+        chatContainer.appendChild(welcome);
+        return;
+    }
+
+    history.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `msg-bubble ${msg.role === 'user' ? 'user' : 'bot'}`;
+        div.innerHTML = `<b>${msg.role === 'user' ? 'Tú' : 'GPT-Tico'}:</b> ${msg.content}`;
+        chatContainer.appendChild(div);
+    });
+
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
 async function sendMessage() {
     const text = userInput.value.trim();
     if (!text) return;
 
-    // Quitar mensaje de bienvenida
-    if (welcomeMsg) welcomeMsg.remove();
-
-    // Mensaje del usuario
-    const userDiv = document.createElement('div');
-    userDiv.className = 'msg-bubble user';
-    userDiv.innerHTML = `<b>Tú:</b> ${text}`;
-    chatContainer.appendChild(userDiv);
-
+    chats[currentChat].push({ role: 'user', content: text });
     userInput.value = '';
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    renderChat();
 
     try {
-        const response = await fetch(API_URL, {
+        const res = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: text,
-                history: history
+                history: chats[currentChat]
             })
         });
 
-        // 🔴 Manejo real de errores HTTP
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status}`);
-        }
+        if (!res.ok) throw new Error('HTTP Error');
 
-        const data = await response.json();
-
-        if (!data.reply) {
-            throw new Error("Respuesta inválida del servidor");
-        }
-
-        // Respuesta del bot
-        const botDiv = document.createElement('div');
-        botDiv.className = 'msg-bubble bot';
-        botDiv.innerHTML = `<b>GPT-Tico:</b> ${data.reply}`;
-        chatContainer.appendChild(botDiv);
-
-        // Guardar historial
-        history.push(
-            { role: 'user', content: text },
-            { role: 'assistant', content: data.reply }
-        );
-
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        const data = await res.json();
+        chats[currentChat].push({ role: 'assistant', content: data.reply });
+        renderChat();
 
     } catch (error) {
-        console.error("Error:", error);
-
-        const errDiv = document.createElement('div');
-        errDiv.className = 'msg-bubble error';
-        errDiv.innerHTML = `<b>Error:</b> No se pudo conectar con el servidor.`;
-        chatContainer.appendChild(errDiv);
-
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        chats[currentChat].push({
+            role: 'assistant',
+            content: '❌ Error de conexión con el servidor'
+        });
+        renderChat();
     }
 }
 
-// Enviar con botón
-sendBtn.addEventListener('click', sendMessage);
+// Cambiar de chat
+chatItems.forEach(item => {
+    item.addEventListener('click', () => {
+        chatItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        currentChat = item.dataset.chat;
+        renderChat();
+    });
+});
 
-// Enviar con Enter
-userInput.addEventListener('keydown', (e) => {
+// Enviar mensaje
+sendBtn.addEventListener('click', sendMessage);
+userInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
         e.preventDefault();
         sendMessage();
     }
 });
+
+// Tema oscuro / claro
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+}
+
+// Render inicial
+renderChat();
