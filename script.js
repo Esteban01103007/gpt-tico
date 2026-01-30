@@ -4,7 +4,7 @@ const chatContainer = document.getElementById('chat-container');
 const welcomeMsg = document.getElementById('welcome-msg');
 
 let history = [];
-const API_URL = "https://tu-backend-en-render.onrender.com/api/chat";
+const API_URL = "https://gpt-tico.onrender.com";
 
 async function sendMessage() {
     const text = userInput.value.trim();
@@ -53,4 +53,5 @@ async function sendMessage() {
 }
 
 sendBtn.addEventListener('click', sendMessage);
+
 userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
