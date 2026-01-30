@@ -1,95 +1,85 @@
-const API_URL = "https://gpt-tico.onrender.com/api/chat";
+const chatContainer = document.getElementById("chat-container");
+const chatList = document.getElementById("chatList");
+const newChatBtn = document.getElementById("newChatBtn");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
 
-const chatContainer = document.getElementById('chat-container');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const chatItems = document.querySelectorAll('.sidebar-item');
-
-let currentChat = 'programacion';
+let currentChatId = "programacion";
 
 const chats = {
     programacion: [],
     futbol: []
 };
 
-function renderChat() {
-    chatContainer.innerHTML = '';
-    const history = chats[currentChat];
+function renderChat(){
+    chatContainer.innerHTML = "";
 
-    if (history.length === 0) {
-        const welcome = document.createElement('div');
-        welcome.id = 'welcome-msg';
-        welcome.textContent = '¿Qué tienes pensado para hoy?';
+    const history = chats[currentChatId];
+
+    if(history.length === 0){
+        const welcome = document.createElement("div");
+        welcome.id = "welcome-msg";
+        welcome.textContent = "¿En qué puedo ayudarte hoy?";
         chatContainer.appendChild(welcome);
         return;
     }
 
-    history.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = `msg-bubble ${msg.role === 'user' ? 'user' : 'bot'}`;
-        div.innerHTML = `<b>${msg.role === 'user' ? 'Tú' : 'GPT-Tico'}:</b> ${msg.content}`;
+    history.forEach(msg=>{
+        const div = document.createElement("div");
+        div.className = `msg-bubble ${msg.role}`;
+        div.textContent = msg.content;
         chatContainer.appendChild(div);
     });
 
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-async function sendMessage() {
+sendBtn.onclick = ()=>{
     const text = userInput.value.trim();
-    if (!text) return;
+    if(!text) return;
 
-    chats[currentChat].push({ role: 'user', content: text });
-    userInput.value = '';
+    chats[currentChatId].push({role:"user",content:text});
+    userInput.value="";
     renderChat();
 
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: text,
-                history: chats[currentChat]
-            })
-        });
-
-        if (!res.ok) throw new Error('HTTP Error');
-
-        const data = await res.json();
-        chats[currentChat].push({ role: 'assistant', content: data.reply });
-        renderChat();
-
-    } catch (error) {
-        chats[currentChat].push({
-            role: 'assistant',
-            content: '❌ Error de conexión con el servidor'
+    setTimeout(()=>{
+        chats[currentChatId].push({
+            role:"bot",
+            content:"Respuesta simulada del bot 🤖"
         });
         renderChat();
-    }
-}
+    },600);
+};
 
-// Cambiar de chat
-chatItems.forEach(item => {
-    item.addEventListener('click', () => {
-        chatItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        currentChat = item.dataset.chat;
+newChatBtn.onclick = ()=>{
+    const id = "chat_"+Date.now();
+    chats[id] = [];
+
+    const div = document.createElement("div");
+    div.className = "sidebar-item";
+    div.textContent = "Nuevo chat";
+    div.onclick = ()=>{
+        document.querySelectorAll(".sidebar-item").forEach(i=>i.classList.remove("active"));
+        div.classList.add("active");
+        currentChatId = id;
         renderChat();
-    });
+    };
+
+    chatList.appendChild(div);
+    div.click();
+};
+
+document.querySelectorAll(".sidebar-item[data-chat]").forEach(item=>{
+    item.onclick = ()=>{
+        document.querySelectorAll(".sidebar-item").forEach(i=>i.classList.remove("active"));
+        item.classList.add("active");
+        currentChatId = item.dataset.chat;
+        renderChat();
+    };
 });
 
-// Enviar mensaje
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMessage();
-    }
-});
-
-// Tema oscuro / claro
-function toggleTheme() {
-    document.body.classList.toggle('dark');
+function toggleTheme(){
+    document.body.classList.toggle("dark");
 }
 
-// Render inicial
 renderChat();
