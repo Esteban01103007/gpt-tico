@@ -35,7 +35,6 @@ body{
     height:100vh;
     background:var(--bg);
     color:var(--text);
-    transition:background .35s ease,color .35s ease;
 }
 
 .sidebar{
@@ -78,7 +77,10 @@ body{
     cursor:pointer;
 }
 
-.sidebar-item:hover{ background:var(--hover); }
+.sidebar-item:hover,
+.sidebar-item.active{
+    background:var(--hover);
+}
 
 .main{
     flex:1;
@@ -120,7 +122,6 @@ body{
 
 body.dark .toggle-indicator{ left:38px; }
 
-/* CONTENEDOR CHAT */
 .content{
     flex:1;
     display:flex;
@@ -129,7 +130,6 @@ body.dark .toggle-indicator{ left:38px; }
     padding:20px;
 }
 
-/* INPUT */
 .input-container{
     padding:20px;
     display:flex;
@@ -163,21 +163,14 @@ body.dark .toggle-indicator{ left:38px; }
     background:var(--hover);
 }
 
-/* ===============================
-   MENSAJES (LO NUEVO)
-   =============================== */
-
 .msg-bubble{
     max-width:70%;
     padding:12px 16px;
     border-radius:14px;
     font-size:14px;
     margin-bottom:12px;
-    line-height:1.4;
-    word-wrap:break-word;
 }
 
-/* USUARIO → DERECHA */
 .msg-bubble.user{
     align-self:flex-end;
     background:#2563eb;
@@ -185,15 +178,11 @@ body.dark .toggle-indicator{ left:38px; }
     border-bottom-right-radius:4px;
 }
 
-/* BOT → IZQUIERDA */
 .msg-bubble.bot{
     align-self:flex-start;
     background:var(--hover);
-    color:var(--text);
-    border-bottom-left-radius:4px;
 }
 
-/* ERROR */
 .msg-bubble.error{
     align-self:center;
     background:#fee2e2;
@@ -215,10 +204,12 @@ body.dark .toggle-indicator{ left:38px; }
     <div class="logo">
         <img src="assets/Logo.png">
     </div>
+
     <div class="divider"></div>
     <div class="section-title">Chats específicos</div>
-    <div class="sidebar-item">💻 Programación</div>
-    <div class="sidebar-item">⚽ Fútbol</div>
+
+    <div class="sidebar-item active" data-chat="programacion">💻 Programación</div>
+    <div class="sidebar-item" data-chat="futbol">⚽ Fútbol</div>
 </div>
 
 <div class="main">
@@ -229,9 +220,7 @@ body.dark .toggle-indicator{ left:38px; }
         </div>
     </div>
 
-    <div class="content" id="chat-container">
-        <div id="welcome-msg">¿Qué tienes pensado para hoy?</div>
-    </div>
+    <div class="content" id="chat-container"></div>
 
     <div class="input-container">
         <div class="input-wrapper">
@@ -246,61 +235,86 @@ body.dark .toggle-indicator{ left:38px; }
 </div>
 
 <script>
-const sendBtn = document.getElementById('send-btn');
-const userInput = document.getElementById('user-input');
-const chatContainer = document.getElementById('chat-container');
-const welcomeMsg = document.getElementById('welcome-msg');
-
-let history = [];
 const API_URL = "https://gpt-tico.onrender.com/api/chat";
+
+const chatContainer = document.getElementById('chat-container');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const chatItems = document.querySelectorAll('.sidebar-item');
+
+let currentChat = 'programacion';
+
+const chats = {
+    programacion: [],
+    futbol: []
+};
+
+function renderChat(){
+    chatContainer.innerHTML = '';
+    const history = chats[currentChat];
+
+    if(history.length === 0){
+        const welcome = document.createElement('div');
+        welcome.id = 'welcome-msg';
+        welcome.textContent = '¿Qué tienes pensado para hoy?';
+        chatContainer.appendChild(welcome);
+        return;
+    }
+
+    history.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `msg-bubble ${msg.role === 'user' ? 'user' : 'bot'}`;
+        div.innerHTML = `<b>${msg.role === 'user' ? 'Tú' : 'GPT-Tico'}:</b> ${msg.content}`;
+        chatContainer.appendChild(div);
+    });
+
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
 async function sendMessage(){
     const text = userInput.value.trim();
     if(!text) return;
-    if(welcomeMsg) welcomeMsg.remove();
 
-    const userDiv = document.createElement('div');
-    userDiv.className = 'msg-bubble user';
-    userDiv.innerHTML = `<b>Tú:</b> ${text}`;
-    chatContainer.appendChild(userDiv);
-
+    chats[currentChat].push({role:'user', content:text});
     userInput.value = '';
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    renderChat();
 
     try{
         const res = await fetch(API_URL,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({message:text, history})
+            body:JSON.stringify({
+                message:text,
+                history:chats[currentChat]
+            })
         });
 
         const data = await res.json();
-
-        const botDiv = document.createElement('div');
-        botDiv.className = 'msg-bubble bot';
-        botDiv.innerHTML = `<b>GPT-Tico:</b> ${data.reply}`;
-        chatContainer.appendChild(botDiv);
-
-        history.push(
-            {role:'user', content:text},
-            {role:'assistant', content:data.reply}
-        );
-
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        chats[currentChat].push({role:'assistant', content:data.reply});
+        renderChat();
     }catch{
-        const err = document.createElement('div');
-        err.className = 'msg-bubble error';
-        err.textContent = 'Error de conexión';
-        chatContainer.appendChild(err);
+        chats[currentChat].push({role:'assistant', content:'❌ Error de conexión'});
+        renderChat();
     }
 }
+
+chatItems.forEach(item=>{
+    item.onclick = () => {
+        chatItems.forEach(i=>i.classList.remove('active'));
+        item.classList.add('active');
+        currentChat = item.dataset.chat;
+        renderChat();
+    };
+});
 
 sendBtn.onclick = sendMessage;
 userInput.onkeydown = e => { if(e.key === 'Enter') sendMessage(); };
 
 function toggleTheme(){
-    document.body.classList.toggle("dark");
+    document.body.classList.toggle('dark');
 }
+
+renderChat();
 </script>
 
 </body>
